@@ -1,0 +1,141 @@
+
+
+header {
+    background-color: #038f70;
+    color: white;
+    padding: 10px;
+    text-align: center;
+}
+
+main {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+}
+
+#view-selector {
+    margin-bottom: 20px;
+}
+
+#calendar-container {
+    width: 75%;
+    margin-left: -20px;
+    margin-right: 20px;
+}
+
+#calendar {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    padding: 20px;
+    margin-left: -30px;
+    justify-content: center;
+    gap: 15px;
+}
+
+.month {
+    width: calc(100% - 10px);
+    margin: 5px;
+    padding: 7px;
+    text-align: center;
+    border-radius: 10px;
+    font-weight: 700;
+    border: 1px solid white;
+}
+
+.days-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    margin-bottom: 10px;
+}
+
+.day-header {
+    font-weight: bold;
+    text-align: center;
+}
+
+.day.empty {
+    visibility: hidden;
+}
+
+.day {
+    display: inline-block;
+    width: 15%;
+    padding: 5px;
+    box-sizing: border-box;
+    margin: 1px;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.5;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    transition: background-color 0.3s ease;
+}
+
+.event {
+    border: 1px solid #fff;
+    padding: 3px;
+    border-radius: 3px;
+}
+
+.event-color-1 { background-color: #4CAF50; }
+.event-color-2 { background-color: #FF9800; }
+.event-color-3 { background-color: #2196F3; }
+.event-color-4 { background-color: #9C27B0; }
+.event-color-5 { background-color: #FF5722; }
+.event-color-6 { background-color: #00BCD4; }
+.event-color-7 { background-color: #673AB7; }
+.event-color-8 { background-color: #CDDC39; }
+.event-color-9 { background-color: #009688; }
+.event-color-10 { background-color: #FF5252; }
+.event-color-11 { background-color: #3F51B5; }
+.event-color-12 { background-color: #E91E63; }
+
+#event-form {
+    font-weight: 700;
+    color: #038f70;
+    width: 300px;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.8);
+    float: right;
+    margin-top: 25px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    height: auto;
+    overflow: auto;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form input, form textarea, form label {
+    margin-top: 10px;
+}
+
+form button {
+    color: #fff;
+    font-weight: 700;
+    height: 30px;
+    margin-top: 10px;
+    cursor: pointer;
+    background-color: #038f70;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover {
+    background-color: #036857;
+}
+
+form textarea, form input {
+    height: 40px;
+}
+
+#daily-view, #monthly-view {
+    display: none;
+}
