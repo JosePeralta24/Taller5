@@ -1,267 +1,149 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const calendarContainer = document.getElementById('calendar');
-    const eventForm = document.getElementById('event-form-details');
-    const deleteButton = document.getElementById('delete-event');
-    const viewSelect = document.getElementById('view-select');
-    const events = JSON.parse(localStorage.getItem('events')) || {};
-    let selectedDate = null;
-    let currentYear = 2024;
-    let currentMonth = new Date().getMonth();
-
-    const colors = [
-        '#4CAF50', '#FF9800', '#2196F3', '#9C27B0', '#FF5722',
-        '#00BCD4', '#673AB7', '#CDDC39', '#009688', '#FF5252',
-        '#3F51B5', '#E91E63'
-    ];
-    let colorIndex = 0;
-
-    const capitalizeFirstLetter = (string) => {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    };
-
-    const daysOfWeek = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-
-    const generarOpcionesHorarios = () => {
-        const selectHora = document.getElementById('event-time');
-        selectHora.innerHTML = '';
-        const inicioDia = new Date();
-        inicioDia.setHours(0, 0, 0, 0);
-        const finDia = new Date();
-        finDia.setHours(23, 59, 59, 999);
+    const viewYearButton = document.getElementById('viewYear');
+    const viewMonthButton = document.getElementById('viewMonth');
+    const viewDayButton = document.getElementById('viewDay');
+    const yearView = document.getElementById('yearView');
+    const monthView = document.getElementById('monthView');
+    const dayView = document.getElementById('dayView');
+    const form = document.getElementById('form');
+    const eventList = document.getElementById('eventList');
+    
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const daysOfWeek = ['L', 'M', 'Mi', 'J', 'V', 'S', 'D'];
+    
+    let events = [];
+    
+    viewYearButton.addEventListener('click', () => {
+        displayView('year');
+        displayYearView();
+    });
+    
+    viewMonthButton.addEventListener('click', () => {
+        displayView('month');
+        displayMonthView();
+    });
+    
+    viewDayButton.addEventListener('click', () => {
+        displayView('day');
+        displayDayView();
+    });
+    
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const eventDate = document.getElementById('eventDate').value;
+        const eventTime = document.getElementById('eventTime').value;
+        const eventDescription = document.getElementById('eventDescription').value;
+        const eventParticipants = document.getElementById('eventParticipants').value;
+        const eventColor = getRandomColor();
         
-        for (let hora = inicioDia.getTime(); hora <= finDia.getTime(); hora += 30 * 60000) {
-            const opcion = document.createElement('option');
-            const horaActual = new Date(hora);
-            opcion.value = horaActual.getHours() + ':' + ('0' + horaActual.getMinutes()).slice(-2);
-            opcion.textContent = horaActual.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
-            selectHora.appendChild(opcion);
+        const event = {
+            date: eventDate,
+            time: eventTime,
+            description: eventDescription,
+            participants: eventParticipants,
+            color: eventColor
+        };
+        
+        events.push(event);
+        renderEventList();
+        form.reset();
+    });
+    
+    function displayView(view) {
+        yearView.style.display = 'none';
+        monthView.style.display = 'none';
+        dayView.style.display = 'none';
+        
+        if (view === 'year') {
+            yearView.style.display = 'grid';
+        } else if (view === 'month') {
+            monthView.style.display = 'grid';
+        } else if (view === 'day') {
+            dayView.style.display = 'grid';
         }
-    };
-
-    const generarOpcionesMeses = () => {
-        const selectMes = document.getElementById('month-select');
-        selectMes.innerHTML = '';
-        const meses = [
-            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-        ];
-        meses.forEach((mes, index) => {
-            const opcion = document.createElement('option');
-            opcion.value = index;
-            opcion.textContent = mes;
-            selectMes.appendChild(opcion);
-        });
-    };
-
-    const renderCalendar = () => {
-        calendarContainer.innerHTML = '';
-        const view = viewSelect.value;
-        if (view === 'annual') {
-            renderAnnualView();
-        } else if (view === 'monthly') {
-            currentMonth = document.getElementById('month-select').value;
-            renderMonthlyView();
-        } else if (view === 'daily') {
-            renderDailyView();
-        }
-    };
-
-    const renderAnnualView = () => {
-        for (let month = 0; month < 12; month++) {
+    }
+    
+    function displayYearView() {
+        yearView.innerHTML = '';
+        months.forEach((month, index) => {
             const monthDiv = document.createElement('div');
             monthDiv.className = 'month';
-            const monthName = new Date(currentYear, month).toLocaleString('es-ES', { month: 'long' });
-            monthDiv.innerHTML = `<h3>${capitalizeFirstLetter(monthName)}</h3>`;
-            
-            const daysHeader = document.createElement('div');
-            daysHeader.className = 'days-header';
-            daysOfWeek.forEach(day => {
-                const dayHeader = document.createElement('div');
-                dayHeader.className = 'day-header';
-                dayHeader.innerText = day;
-                daysHeader.appendChild(dayHeader);
-            });
-            monthDiv.appendChild(daysHeader);
-
-            const firstDay = new Date(currentYear, month, 1).getDay();
-            for (let i = 0; i < firstDay; i++) {
-                const emptyDiv = document.createElement('div');
-                emptyDiv.className = 'day empty';
-                monthDiv.appendChild(emptyDiv);
-            }
-
-            for (let day = 1; day <= new Date(currentYear, month + 1, 0).getDate(); day++) {
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'day';
-                dayDiv.innerText = day;
-                const dateKey = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                if (events[dateKey]) {
-                    const event = events[dateKey];
-                    dayDiv.classList.add('event');
-                    dayDiv.style.backgroundColor = event.color;
-                    dayDiv.innerHTML += `<span class="event-description">${event.description}</span>`;
-                }
-                dayDiv.addEventListener('click', () => {
-                    selectedDate = dateKey;
-                    const event = events[dateKey] || {};
-                    document.getElementById('event-date').value = dateKey;
-                    document.getElementById('event-time').value = event.time || '';
-                    document.getElementById('event-description').value = event.description || '';
-                    document.getElementById('event-participants').value = event.participants || '';
-                });
-                monthDiv.appendChild(dayDiv);
-            }
-            calendarContainer.appendChild(monthDiv);
-        }
-    };
-
-    const renderMonthlyView = () => {
+            monthDiv.innerHTML = `<h3>${month}</h3>`;
+            monthDiv.appendChild(createMonthDays(index));
+            yearView.appendChild(monthDiv);
+        });
+    }
+    
+    function displayMonthView() {
+        monthView.innerHTML = '';
+        const currentMonth = new Date().getMonth();
         const monthDiv = document.createElement('div');
         monthDiv.className = 'month';
-        const monthName = new Date(currentYear, currentMonth).toLocaleString('es-ES', { month: 'long' });
-        monthDiv.innerHTML = `<h3>${capitalizeFirstLetter(monthName)}</h3>`;
+        monthDiv.innerHTML = `<h3>${months[currentMonth]}</h3>`;
+        monthDiv.appendChild(createMonthDays(currentMonth));
+        monthView.appendChild(monthDiv);
+    }
+    
+    function displayDayView() {
+        dayView.innerHTML = '';
+        for (let hour = 0; hour < 24; hour++) {
+            const hourDiv = document.createElement('div');
+            hourDiv.className = 'hour';
+            hourDiv.innerHTML = `${hour}:00`;
+            dayView.appendChild(hourDiv);
+        }
+    }
+    
+    function createMonthDays(monthIndex) {
+        const daysDiv = document.createElement('div');
+        daysDiv.className = 'days';
         
-        const daysHeader = document.createElement('div');
-        daysHeader.className = 'days-header';
+        const firstDay = new Date(2024, monthIndex, 1).getDay();
+        const daysInMonth = new Date(2024, monthIndex + 1, 0).getDate();
+        
         daysOfWeek.forEach(day => {
-            const dayHeader = document.createElement('div');
-            dayHeader.className = 'day-header';
-            dayHeader.innerText = day;
-            daysHeader.appendChild(dayHeader);
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'dayOfWeek';
+            dayDiv.innerHTML = day;
+            daysDiv.appendChild(dayDiv);
         });
-        monthDiv.appendChild(daysHeader);
-
-        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        
         for (let i = 0; i < firstDay; i++) {
             const emptyDiv = document.createElement('div');
-            emptyDiv.className = 'day empty';
-            monthDiv.appendChild(emptyDiv);
+            emptyDiv.className = 'empty';
+            daysDiv.appendChild(emptyDiv);
         }
-
-        for (let day = 1; day <= new Date(currentYear, currentMonth + 1, 0).getDate(); day++) {
+        
+        for (let day = 1; day <= daysInMonth; day++) {
             const dayDiv = document.createElement('div');
             dayDiv.className = 'day';
-            dayDiv.innerText = day;
-            const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            if (events[dateKey]) {
-                const event = events[dateKey];
-                dayDiv.classList.add('event');
-                dayDiv.style.backgroundColor = event.color;
-                dayDiv.innerHTML += `<span class="event-description">${event.description}</span>`;
-            }
-            dayDiv.addEventListener('click', () => {
-                selectedDate = dateKey;
-                const event = events[dateKey] || {};
-                document.getElementById('event-date').value = dateKey;
-                document.getElementById('event-time').value = event.time || '';
-                document.getElementById('event-description').value = event.description || '';
-                document.getElementById('event-participants').value = event.participants || '';
-            });
-            monthDiv.appendChild(dayDiv);
+            dayDiv.innerHTML = day;
+            daysDiv.appendChild(dayDiv);
         }
-        calendarContainer.appendChild(monthDiv);
-    };
-
-    const renderDailyView = () => {
-        calendarContainer.innerHTML = '';
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'day';
-        const selectedDay = selectedDate || new Date().toISOString().split('T')[0];
-        const dayName = new Date(selectedDay).toLocaleString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        dayDiv.innerHTML = `<h3>${capitalizeFirstLetter(dayName)}</h3>`;
         
-        for (let hour = 0; hour < 24; hour++) {
-            for (let minute = 0; minute < 60; minute += 30) {
-                const timeKey = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-                const eventKey = `${selectedDay} ${timeKey}`;
-                if (events[eventKey]) {
-                    const event = events[eventKey];
-                    const hourDiv = document.createElement('div');
-                    hourDiv.className = 'hour event';
-                    hourDiv.style.backgroundColor = event.color;
-                    hourDiv.innerHTML = `<span class="event-time">${timeKey}</span> <span class="event-description">${event.description}</span>`;
-                    hourDiv.addEventListener('click', () => {
-                        selectedDate = selectedDay;
-                        document.getElementById('event-date').value = selectedDay;
-                        document.getElementById('event-time').value = timeKey;
-                        document.getElementById('event-description').value = event.description || '';
-                        document.getElementById('event-participants').value = event.participants || '';
-                    });
-                    dayDiv.appendChild(hourDiv);
-                } else {
-                    const hourDiv = document.createElement('div');
-                    hourDiv.className = 'hour';
-                    hourDiv.innerHTML = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-                    hourDiv.addEventListener('click', () => {
-                        selectedDate = selectedDay;
-                        document.getElementById('event-date').value = selectedDay;
-                        document.getElementById('event-time').value = timeKey;
-                        document.getElementById('event-description').value = '';
-                        document.getElementById('event-participants').value = '';
-                    });
-                    dayDiv.appendChild(hourDiv);
-                }
-            }
-        }
-        calendarContainer.appendChild(dayDiv);
+        return daysDiv;
+    }
+    
+    function renderEventList() {
+        eventList.innerHTML = '';
+        events.forEach((event, index) => {
+            const eventItem = document.createElement('li');
+            eventItem.style.backgroundColor = event.color;
+            eventItem.innerHTML = `${event.date} ${event.time} - ${event.description} - ${event.participants}<button onclick="deleteEvent(${index})">Eliminar</button>`;
+            eventList.appendChild(eventItem);
+        });
+    }
+    
+    window.deleteEvent = (index) => {
+        events.splice(index, 1);
+        renderEventList();
     };
-
-    const saveEvent = () => {
-        const date = document.getElementById('event-date').value;
-        const time = document.getElementById('event-time').value;
-        const description = document.getElementById('event-description').value;
-        const participants = document.getElementById('event-participants').value;
-
-        if (!date || !time || !description) {
-            alert('Por favor completa todos los campos: Fecha, Hora y Descripción.');
-            return;
-        }
-
-        const dateTime = `${date} ${time}`;
-        const color = colors[colorIndex % colors.length]; // Seleccionar color basado en el índice
-        colorIndex++;
-
-        events[dateTime] = { description, participants, color };
-        localStorage.setItem('events', JSON.stringify(events));
-
-        renderCalendar();
-        clearForm();
-    };
-
-    const deleteEvent = () => {
-        if (!selectedDate) {
-            alert('Selecciona un evento para eliminarlo.');
-            return;
-        }
-
-        if (confirm('¿Estás seguro de que deseas eliminar este evento?')) {
-            delete events[selectedDate];
-            localStorage.setItem('events', JSON.stringify(events));
-            selectedDate = null;
-            renderCalendar();
-            clearForm();
-        }
-    };
-
-    const clearForm = () => {
-        document.getElementById('event-date').value = '';
-        document.getElementById('event-time').value = '';
-        document.getElementById('event-description').value = '';
-        document.getElementById('event-participants').value = '';
-    };
-
-    // Event listeners
-    viewSelect.addEventListener('change', renderCalendar);
-    document.getElementById('month-select').addEventListener('change', renderCalendar);
-    document.getElementById('add-event').addEventListener('click', saveEvent);
-    deleteButton.addEventListener('click', deleteEvent);
-    document.getElementById('cancel-event').addEventListener('click', clearForm);
-    document.getElementById('event-time').addEventListener('click', generarOpcionesHorarios);
-    document.getElementById('month-select').addEventListener('click', generarOpcionesMeses);
-
-    // Initialize
-    generarOpcionesHorarios();
-    generarOpcionesMeses();
-    renderCalendar();
+    
+    function getRandomColor() {
+        const colors = ['#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#00B3E6', '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D', '#80B300', '#809900'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+    
+    displayView('year');
+    displayYearView();
 });
-
